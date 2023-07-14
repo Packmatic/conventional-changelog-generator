@@ -77,8 +77,12 @@ const changelogGenerator = (version, commitData) => {
 
     if (!categoryTypes.includes(type)) return;
 
-    const subsystem = match[2];
-    const message = capitalize(match[3]);
+    const subsystem = match[2]?.slice(1, -1);
+    const commitMessage = capitalize(match[3]);
+
+    const message = subsystem
+      ? `**${subsystem}:** ${commitMessage}`
+      : commitMessage;
 
     if (!templateCategories.has(type)) {
       templateCategories.set(type, [message]);
