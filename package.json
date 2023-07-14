@@ -4,7 +4,7 @@
   "description": "Generate a changelog based on the conventional commit history for the latest tag.",
   "main": "index.js",
   "scripts": {
-    "compile": "ncc build index.js",
+    "compile": "npx @vercel/ncc build index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
