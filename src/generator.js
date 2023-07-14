@@ -12,14 +12,12 @@ const core = require("@actions/core");
  * }...
  */
 const createCommitCategories = (mapping) => {
-  const categories = mapping.split(",");
-  return categories.map((element) => {
-    const category = element.split(":");
-    return {
-      type: category[0],
-      name: category[1],
-    };
-  });
+  const categories = mapping.split(",").map((s) => s.trim());
+  return Object.fromEntries(
+    categories.map((element) => {
+      return element.split(":").map((s) => s.trim());
+    })
+  );
 };
 
 /**
@@ -59,36 +57,33 @@ const changelogGenerator = (version, commitData) => {
   const categories = createCommitCategories(commitTypes);
   const template = obtainTemplate(templateFilePath);
 
+  const categoryTypes = Object.keys(categories);
+
   const dated = template.replace("{{date}}", new Date().toLocaleDateString());
   const versioned = dated.replace("{{versionName}}", version);
+
+  const regex = /^(\w+)(\(\w+\))?:\s(.+)$/;
 
   core.info("creating changelog template");
   const templateCategories = new Map();
   commitData.forEach((val) => {
     const commit = createSingleLineMessage(val.commit.message);
-    const category = categories.find((value) => {
-      if (commit.indexOf(value.type) != -1) {
-        return value;
-      } else {
-        return undefined;
-      }
-    });
-    if (category) {
-      const commitMessage = commit.substring(
-        commit.indexOf(": ") + 2,
-        commit.length
-      );
-      const message = capitalize(
-        commitMessage[0],
-        commitMessage.substring(1, commitMessage.length)
-      );
-      if (!templateCategories.has(category.name)) {
-        templateCategories.set(category.name, [message]);
-      } else {
-        const currentCommits = templateCategories.get(category.name);
-        currentCommits.push(message);
-        templateCategories.set(category.name, currentCommits);
-      }
+
+    const match = commit.match(regex);
+
+    if (!match) return;
+
+    const type = match[1];
+
+    if (!categoryTypes.includes(type)) return;
+
+    const subsystem = match[2];
+    const message = capitalize(match[3]);
+
+    if (!templateCategories.has(type)) {
+      templateCategories.set(type, [message]);
+    } else {
+      templateCategories.get(type).push(message);
     }
   });
 
@@ -105,7 +100,7 @@ const changelogGenerator = (version, commitData) => {
   const templateCategorySections = [];
   templateCategories.forEach((messages, section) => {
     templateCategorySections.push(
-      `${sectionFormat.replace("$title", section)}\n`
+      `${sectionFormat.replace("$title", categories[section])}\n`
     );
     messages.forEach((message) => {
       templateCategorySections.push(
