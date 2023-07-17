@@ -6085,7 +6085,7 @@ const changelogGenerator = (version, commitData) => {
   const dated = template.replace("{{date}}", new Date().toLocaleDateString());
   const versioned = dated.replace("{{versionName}}", version);
 
-  const regex = /^(\w+)(\(\w+\))?:\s(.+)$/;
+  const regex = /^(\w+)(\([\w-]+\))?:\s(.+)$/;
 
   core.info("creating changelog template");
   const templateCategories = new Map();
